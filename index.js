@@ -12,6 +12,6 @@ app.use(express.json());
  
 // ROUTES
 app.use('/api/videogames', videogameRoutes);
-app.use('/api/user', userRoutes)
+app.use('/api/auth', userRoutes)
  
 module.exports = app;

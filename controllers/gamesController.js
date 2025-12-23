@@ -44,7 +44,7 @@ exports.getVideoGamesByType = async (req, res) => {
 
 exports.getAllVideoGames = async (req, res) => {
     try {
-        const games = VideoGame.find();
+        const games = await VideoGame.find();
 
         res.status(200).json({
             status: 'success',
@@ -72,7 +72,7 @@ exports.insertVideoGame = async (req, res) => {
     }
 }
 
-exports.getVideoGame = async (req, res) => {
+exports.getVideoGameById = async (req, res) => {
     try {
         const game = await VideoGame.findById(req.params.id);
 
@@ -83,6 +83,101 @@ exports.getVideoGame = async (req, res) => {
         res.status(200).json({
             status: 'success',
             data: { game }
+        });
+    } catch (err) {
+        res.status(400).json({ status: 'fail', message: err.message });
+    }
+}
+
+exports.searchVideoGames = async (req, res) => {
+    try {
+        const {
+            title,
+            
+            minReleaseYear,
+            maxReleaseYear,
+
+            minRating,
+            maxRating,
+
+            online,
+            company,
+            type,
+
+            minCompletionTime,
+            maxCompletionTime,
+
+            minPrice,
+            maxPrice,
+
+            consoles,
+            difficulty,
+            genreTags,
+            multiplayerModes,
+            languages,
+            awards,
+            availableOnStore,
+
+            sort
+        } = req.query
+
+        let filter = {};
+
+        if (title)
+            filter.title = { $regex: title, $options: 'i' } //'i' for case insensitive
+        
+        if (minReleaseYear || maxReleaseYear) {
+            filter.releaseYear = {};
+            if (minReleaseYear) filter.releaseYear.$gte = Number(minReleaseYear);
+            if (maxReleaseYear) filter.releaseYear.$lte = Number(maxReleaseYear);
+        }
+        
+        if (minRating || maxRating) {
+            filter.rating = {};
+            if (minRating) filter.rating.$gte = Number(minRating);
+            if (maxRating) filter.rating.$lte = Number(maxRating);
+        }
+
+        if (minCompletionTime || maxCompletionTime) {
+            filter.completionTime = {};
+            if (minCompletionTime) filter.completionTime.$gte = Number(minCompletionTime);
+            if (maxCompletionTime) filter.completionTime.$lte = Number(maxCompletionTime);
+        }
+
+        if (minPrice || maxPrice) {
+            filter.price = {};
+            if (minPrice) filter.price.$gte = Number(minPrice);
+            if (maxPrice) filter.price.$lte = Number(maxPrice);
+        }
+        
+        if (online !== undefined) filter.online = online;
+        if (availableOnStore !== undefined) filter.availableOnStore = availableOnStore;
+
+        if (company) filter.company = company;
+        if (type) filter.type = type;
+        if (difficulty) filter.difficulty = difficulty;
+        
+        if (consoles) filter.consoles = { $all: consoles.split(',').map(s => s.trim()) };
+        if (genreTags) filter.genreTags = { $all: genreTags.split(',').map(s => s.trim()) };
+        if (multiplayerModes) filter.multiplayerModes = { $all: multiplayerModes.split(',').map(s => s.trim()) };
+        if (languages) filter.languages = { $all: languages.split(',').map(s => s.trim()) };
+        if (awards) filter.awards = { $all: awards.split(',').map(s => s.trim()) };
+        
+
+        let query = VideoGame.find(filter);
+        if (sort) {
+            const sortBy = sort.split(','.join(' '));
+            query.sort(sortBy);
+        } else {
+            query.sort('-createdAt');
+        }
+
+        const games = await query;
+
+        res.status(200).json({
+            status: 'success',
+            results: games.length,
+            data: { games }
         });
     } catch (err) {
         res.status(400).json({ status: 'fail', message: err.message });

@@ -7,8 +7,9 @@ const router = express.Router();
 //Public
 router.route('/top-5-rated').get(gamesController.getTop5VideoGames);
 router.route('/by-type').get(gamesController.getVideoGamesByType)
-router.route('/').get(gamesController.getAllVideoGames);
-router.route('/:id', gamesController.getVideoGame);
+router.route('/all-videogames').get(gamesController.getAllVideoGames);
+router.route('/:id', gamesController.getVideoGameById);
+router.route('/search').get(gamesController.searchVideoGames);
 
 //Protected
 router.post('/', authController.protect, gamesController.insertVideoGame);
