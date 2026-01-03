@@ -20,8 +20,7 @@ exports.signup = async (req, res) => {
 
         res.status(201).json({
             status: 'success',
-            token,
-            data: { user: newUser }
+            token: token
         })
     } catch (err) {
         res.status(400).json({ status: 'fail', message: err.message });
@@ -62,7 +61,7 @@ exports.protect = async (req, res, next) => {
             }
         }
 
-        const decoded = jwt.verify(token, 'MY_SUPER_SECRET_KEY_123');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
         const currentUser = await User.findById(decoded.id);
         if (!currentUser) {

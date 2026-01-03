@@ -16,8 +16,9 @@ mongoose
     .then(() => {
         console.info("DB connection established");
 
-        const app = require("./index");
+        const app = require("./index.js");
         const port = process.env.PORT || 8100;
+        
         app.listen(port, () => {
             console.info("Listening on port: ", port);
         });

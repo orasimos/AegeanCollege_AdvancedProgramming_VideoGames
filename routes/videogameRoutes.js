@@ -8,7 +8,7 @@ const router = express.Router();
 router.route('/top-5-rated').get(gamesController.getTop5VideoGames);
 router.route('/by-type').get(gamesController.getVideoGamesByType)
 router.route('/all-videogames').get(gamesController.getAllVideoGames);
-router.route('/:id', gamesController.getVideoGameById);
+router.route('/:id').get(gamesController.getVideoGameById);
 router.route('/search').get(gamesController.searchVideoGames);
 
 //Protected

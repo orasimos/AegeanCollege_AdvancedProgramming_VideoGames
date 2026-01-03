@@ -1,3 +1,4 @@
+const path = require("path");
 const morgan = require('morgan');
 const express = require('express');
 
@@ -13,5 +14,6 @@ app.use(express.json());
 // ROUTES
 app.use('/api/videogames', videogameRoutes);
 app.use('/api/auth', userRoutes)
+app.use(express.static(path.join(__dirname, 'public')));
  
 module.exports = app;

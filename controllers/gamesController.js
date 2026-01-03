@@ -60,7 +60,7 @@ exports.insertVideoGame = async (req, res) => {
     try {
         const newGame = await VideoGame.create(req.body);
 
-        res.status({
+        res.status(200).json({
             status: 'success',
             data: { game: newGame }
         });
@@ -73,6 +73,7 @@ exports.insertVideoGame = async (req, res) => {
 }
 
 exports.getVideoGameById = async (req, res) => {
+    console.log(req)
     try {
         const game = await VideoGame.findById(req.params.id);
 

@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game API Visualizer</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 25px;
+            height: 100vh;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        /* --- Sidebar Styling --- */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
+            padding-right: 5px;
+            height: 100%;
+        }
+
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .panel h3 {
+            margin: 0 0 12px 0;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            border-bottom: 2px solid var(--bg);
+            padding-bottom: 8px;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 8px 10px;
+            margin-bottom: 8px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        .row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .row input {
+            flex: 1;
+        }
+
+        button {
+            width: 100%;
+            padding: 8px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-bottom: 5px;
+        }
+
+        button:hover {
+            background: var(--primary-dark);
+        }
+
+        button.secondary {
+            background: var(--text-muted);
+        }
+
+        button.danger {
+            background: var(--danger);
+        }
+
+        button.success {
+            background: var(--success);
+        }
+
+        /* --- Main Content Area --- */
+        .main-content {
+            background: var(--surface);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .status-bar {
+            padding: 12px 20px;
+            background: #f1f5f9;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+
+        .output-area {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8fafc;
+        }
+
+        /* --- Visualizer Styles (Game Cards) --- */
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .game-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+            transition: transform 0.2s;
+        }
+
+        .game-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-img {
+            width: 100%;
+            height: 160px;
+            background-color: #cbd5e1;
+            object-fit: cover;
+        }
+
+        .card-body {
+            padding: 15px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .card-title {
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin: 0;
+            color: var(--text-main);
+        }
+
+        .rating-badge {
+            background: var(--warning);
+            color: #fff;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.8rem;
+        }
+
+        .meta-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+
+        .tag-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 10px;
+        }
+
+        .tag {
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 12px;
+            background: #e2e8f0;
+            color: var(--text-muted);
+        }
+
+        .tag.console {
+            background: #334155;
+            color: white;
+        }
+
+        .tag.genre {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .card-footer {
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px solid #f1f5f9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .price {
+            font-weight: bold;
+            color: var(--success);
+            font-size: 1.1rem;
+        }
+
+        /* Raw JSON fallback */
+        .raw-json {
+            background: #1e293b;
+            color: #a5b4fc;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-width: 100%;
+        }
+
+        /* Detail View Specifics */
+        .detail-view {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .detail-header {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .detail-cover {
+            width: 120px;
+            height: 160px;
+            border-radius: 8px;
+            object-fit: cover;
+            background: #ddd;
+        }
+
+        .detail-info h1 {
+            margin: 0 0 5px 0;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .detail-item strong {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* HTML: <div class="loader"></div> */
+        .loader-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .loader {
+            width: 40px;
+            height: 20px;
+            --c: no-repeat radial-gradient(farthest-side, #000 93%, #0000);
+            background:
+                var(--c) 0 0,
+                var(--c) 50% 0;
+            background-size: 8px 8px;
+            position: relative;
+            clip-path: inset(-200% -100% 0 0);
+            animation: l6-0 1.5s linear infinite;
+        }
+
+        .loader:before {
+            content: "";
+            position: absolute;
+            width: 8px;
+            height: 12px;
+            background: #000;
+            left: -16px;
+            top: 0;
+            animation:
+                l6-1 1.5s linear infinite,
+                l6-2 0.5s cubic-bezier(0, 200, .8, 200) infinite;
+        }
+
+        .loader:after {
+            content: "";
+            position: absolute;
+            inset: 0 0 auto auto;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #000;
+            animation: l6-3 1.5s linear infinite;
+        }
+
+        @keyframes l6-0 {
+
+            0%,
+            30% {
+                background-position: 0 0, 50% 0
+            }
+
+            33% {
+                background-position: 0 100%, 50% 0
+            }
+
+            41%,
+            63% {
+                background-position: 0 0, 50% 0
+            }
+
+            66% {
+                background-position: 0 0, 50% 100%
+            }
+
+            74%,
+            100% {
+                background-position: 0 0, 50% 0
+            }
+        }
+
+        @keyframes l6-1 {
+            90% {
+                transform: translateY(0)
+            }
+
+            95% {
+                transform: translateY(15px)
+            }
+
+            100% {
+                transform: translateY(15px);
+                left: calc(100% - 8px)
+            }
+        }
+
+        @keyframes l6-2 {
+            100% {
+                top: -0.1px
+            }
+        }
+
+        @keyframes l6-3 {
+
+            0%,
+            80%,
+            100% {
+                transform: translate(0)
+            }
+
+            90% {
+                transform: translate(26px)
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="sidebar">
+        <div class="panel">
+            <h3>⚙️ Configuration</h3>
+            <label for="gamesUrl">Games URL</label>
+            <input type="text" id="baseUrl" value="http://localhost:8100/api/videogames">
+            <label for="authUrl">Auth URL</label>
+            <input type="text" id="authUrl" value="http://localhost:8100/api/auth">
+            <div style="font-size: 0.8rem; margin-top:5px;">
+                Auth Status: <span id="authBadge" style="color: red; font-weight: bold;">Not Logged In</span>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h3>🔐 Authentication</h3>
+            <div class="row">
+                <button onclick="toggleAuth('login')" id="tabLogin">Login</button>
+                <button onclick="toggleAuth('signup')" id="tabSignup" style="background-color: #9ca3af;">Signup</button>
+            </div>
+
+            <div id="loginForm" style="margin-top: 15px;">
+                <div class="form-group"><input type="email" id="loginEmail" placeholder="Email"></div>
+                <div class="form-group"><input type="password" id="loginPass" placeholder="Password"></div>
+                <button onclick="login()">Log In</button>
+            </div>
+
+            <div id="signupForm" class="hidden" style="margin-top: 15px;">
+                <div class="form-group"><input type="text" id="signName" placeholder="Name"></div>
+                <div class="form-group"><input type="email" id="signEmail" placeholder="Email"></div>
+                <div class="form-group"><input type="password" id="signPass" placeholder="Password"></div>
+                <div class="form-group"><input type="password" id="signPassConf" placeholder="Confirm Password"></div>
+                <button class="success" onclick="signup()">Sign Up</button>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h3>🔍 Search & Filter</h3>
+            <div class="row">
+                <button onclick="fetchApi('/top-5-rated')">Top 5 Rated</button>
+                <button onclick="fetchApi('/all-videogames')">Get All</button>
+            </div>
+            <div class="row" style="margin-top: 10px;">
+                <input type="text" id="targetId" placeholder="Paste Game ID Here...">
+                <button style="width: 80px;" onclick="fetchById()">Find</button>
+            </div>
+            <div class="row">
+                <input type="text" id="sTitle" placeholder="Title...">
+                <button style="width: 80px;" onclick="doSearch()">Search</button>
+            </div>
+            <div class="row">
+                <input type="number" id="sMinRate" placeholder="Min Rating">
+                <input type="number" id="sMaxRate" placeholder="Max Rating">
+            </div>
+        </div>
+
+        <div class="panel">
+            <h3>4. Single Game Actions</h3>
+            <input type="text" id="targetId" placeholder="Paste Game ID Here...">
+            <div class="row">
+                <button class="danger" onclick="deleteGame()">Delete</button>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h3>5. Create / Update</h3>
+            <input type="text" id="pTitle" placeholder="Title">
+            <div class="row">
+                <input type="text" id="pCompany" placeholder="Company">
+                <input type="text" id="pType" placeholder="Type (RPG, FPS)">
+            </div>
+            <div class="row">
+                <input type="number" id="pRating" placeholder="Rating">
+                <input type="number" id="pPrice" placeholder="Price">
+            </div>
+            <div class="row">
+                <button class="success" onclick="createGame()">Create New</button>
+                <button class="warning" onclick="updateGame()">Update (Use ID)</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="status-bar">
+            <span id="statusMethod">READY</span>
+            <span id="statusUrl" style="color: var(--text-muted);">Waiting for request...</span>
+        </div>
+
+        <div class="output-area loader-container hidden" id="loader">
+            <div class="loader"></div>
+        </div>
+
+        <div class="output-area" id="output">
+            <div style="text-align: center; color: #94a3b8; margin-top: 50px;">
+                <h2>👋 Welcome</h2>
+                <p>Select an action from the sidebar to visualize your API data.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- STATE ---
+        let authToken = null;
+
+        // --- UTILS ---
+        const getGameUrl = () => document.getElementById('baseUrl').value.replace(/\/$/, "");
+        const getAuthUrl = () => document.getElementById('authUrl').value.replace(/\/$/, "");
+
+        const outputArea = document.getElementById('output');
+        const loader = document.getElementById('loader');
+
+        function setStatus(method, url) {
+            document.getElementById('statusMethod').innerText = method;
+            document.getElementById('statusUrl').innerText = url;
+        }
+
+        // --- MAIN RENDERER ---
+        function render(data) {
+            const container = document.getElementById('output');
+            container.innerHTML = '';
+
+            // 1. Error Handling
+            if (data.status === 'fail' || data.status === 'error') {
+                container.innerHTML = `
+                    <div class="panel" style="border-left: 5px solid red;">
+                        <h2 style="color:red">Error</h2>
+                        <p>${data.message}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // 2. Auth Success
+            if (data.token) {
+                authToken = data.token;
+                sessionStorage.setItem('GamesToken', data.token);
+                document.getElementById('authBadge').innerText = "Logged In";
+                document.getElementById('authBadge').style.color = "green";
+                container.innerHTML = `
+                    <div class="panel" style="border-left: 5px solid green;">
+                        <h2>Authentication Successful</h2>
+                        <p>Token saved. You can now use protected routes (Create, Update, Delete).</p>
+                        <div class="raw-json">${JSON.stringify(data, null, 2)}</div>
+                    </div>
+                `;
+                return;
+            }
+
+            // 3. List of Games (Array)
+            if (data.data && data.data.games && Array.isArray(data.data.games)) {
+                const grid = document.createElement('div');
+                grid.className = 'game-grid';
+
+                if (data.data.games.length === 0) {
+                    container.innerHTML = `<h3>No games found matching criteria.</h3>`;
+                    return;
+                }
+
+                data.data.games.forEach(game => {
+                    grid.innerHTML += createGameCard(game);
+                });
+                container.appendChild(grid);
+                return;
+            }
+
+            // 4. Single Game (Object)
+            if (data.data && data.data.game) {
+                container.innerHTML = createDetailView(data.data.game);
+                return;
+            }
+
+            // 5. Fallback (Raw JSON for anything else)
+            container.innerHTML = `<div class="raw-json">${JSON.stringify(data, null, 2)}</div>`;
+        }
+
+        // --- HTML GENERATORS ---
+
+        function createGameCard(game) {
+            // Fallback image if none provided
+            const img = (game.images && game.images.length > 0) ? game.images[0] : 'https://placehold.co/400x300?text=No+Image';
+
+            // Generate tags
+            let tagsHtml = '';
+            if (game.genreTags) game.genreTags.forEach(t => tagsHtml += `<span class="tag genre">${t}</span>`);
+            if (game.consoles) game.consoles.forEach(c => tagsHtml += `<span class="tag console">${c}</span>`);
+
+            return `
+                <div class="game-card" onclick="selectGame('${game._id}')">
+                    <img src="${img}" class="card-img" alt="${game.title}">
+                    <div class="card-body">
+                        <div class="card-header">
+                            <h4 class="card-title">${game.title}</h4>
+                            <span class="rating-badge">★ ${game.rating || '-'}</span>
+                        </div>
+                        <div class="meta-row">
+                            <span>${game.company || 'Unknown Dev'}</span>
+                            <span>${game.releaseYear || ''}</span>
+                        </div>
+                        <div class="tag-container">${tagsHtml}</div>
+                        <div class="card-footer">
+                            <span class="price">$${game.price || '0.00'}</span>
+                            <button style="width: auto; padding: 4px 10px; font-size: 0.8rem;" onclick="selectGame('${game._id}')">View ID</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function createDetailView(game) {
+            const img = (game.images && game.images.length > 0) ? game.images[0] : 'https://placehold.co/400x300?text=No+Image';
+
+            return `
+                <div class="detail-view">
+                    <div class="detail-header">
+                        <img src="${img}" class="detail-cover">
+                        <div class="detail-info">
+                            <h1 style="color: var(--primary-dark)">${game.title}</h1>
+                            <div style="margin-bottom: 10px;">
+                                <span class="rating-badge" style="font-size: 1rem; padding: 5px 10px;">★ ${game.rating}</span>
+                                <span class="tag" style="font-size: 1rem; margin-left: 10px;">${game.type}</span>
+                            </div>
+                            <p>${game.description || 'No description available.'}</p>
+                            ${game.metacriticURL ? `<a href="${game.metacriticURL}" target="_blank" style="color: var(--primary); text-decoration: none;">Read Metacritic Review &rarr;</a>` : ''}
+                        </div>
+                    </div>
+
+                    <div class="detail-grid">
+                        <div class="detail-item"><strong>Developer</strong> ${game.company}</div>
+                        <div class="detail-item"><strong>Release Year</strong> ${game.releaseYear}</div>
+                        <div class="detail-item"><strong>Price</strong> $${game.price}</div>
+                        <div class="detail-item"><strong>Difficulty</strong> ${game.difficulty}</div>
+                        <div class="detail-item"><strong>Completion Time</strong> ${game.completionTime} hours</div>
+                        <div class="detail-item"><strong>Online</strong> ${game.online ? '✅ Yes' : '❌ No'}</div>
+                        <div class="detail-item"><strong>Consoles</strong> ${game.consoles ? game.consoles.join(', ') : '-'}</div>
+                        <div class="detail-item"><strong>ID</strong> <span style="font-family:monospace">${game._id}</span></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function selectGame(id) {
+            // Puts ID in the input box for easy update/delete
+            document.getElementById('targetId').value = id;
+        }
+
+        // --- API LOGIC ---
+
+        async function apiCall(url, method, body = null, secure = false) {
+            showLoading();
+            setStatus(method, url);
+
+            const headers = { 'Content-Type': 'application/json' };
+            const token = sessionStorage.getItem('GamesToken');
+            if (secure && token) headers['Authorization'] = `Bearer ${token}`;
+
+            const opts = { method, headers };
+            if (body) opts.body = JSON.stringify(body);
+
+            try {
+                const res = await fetch(url, opts);
+                if (res.status === 204) {
+                    render({ message: "Deleted Successfully (204 No Content)" });
+                    return;
+                }
+                const data = await res.json();
+                render(data);
+            } catch (e) {
+                render({ status: 'error', message: e.message });
+            } finally {
+                showLoading();
+            }
+        }
+
+        // Wrappers
+        const fetchApi = (endpoint) => apiCall(`${getGameUrl()}${endpoint}`, 'GET');
+        const fetchById = () => {
+            const id = document.getElementById('targetId').value;
+            if (!id) return alert("ID Required");
+            apiCall(`${getGameUrl()}/${id}`, 'GET');
+        }
+
+        const doSearch = () => {
+            const title = document.getElementById('sTitle').value;
+            const minR = document.getElementById('sMinRate').value;
+            const maxR = document.getElementById('sMaxRate').value;
+
+            // Build Query String manually
+            let q = '?';
+            if (title) q += `title=${title}&`;
+            if (minR) q += `minRating=${minR}&`;
+            if (maxR) q += `maxRating=${maxR}&`;
+
+            apiCall(`${getGameUrl()}/search${q}`, 'GET');
+        }
+
+        const toggleAuth = (tab) => {
+            const loginForm = document.getElementById('loginForm');
+            const signupForm = document.getElementById('signupForm');
+            const loginBtn = document.getElementById('tabLogin');
+            const signupBtn = document.getElementById('tabSignup');
+
+            if (tab === 'login') {
+                loginForm.classList.remove('hidden');
+                signupForm.classList.add('hidden');
+                loginBtn.style.backgroundColor = 'var(--primary)';
+                signupBtn.style.backgroundColor = '#9ca3af';
+            } else {
+                loginForm.classList.add('hidden');
+                signupForm.classList.remove('hidden');
+                loginBtn.style.backgroundColor = '#9ca3af';
+                signupBtn.style.backgroundColor = 'var(--success)';
+            }
+        };
+
+        const login = () => {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPass').value;
+            apiCall(`${getAuthUrl()}/login`, 'POST', { email: email, password: password });
+        }
+
+        const signup = () => {
+            const name = document.getElementById('signName').value;
+            const email = document.getElementById('signEmail').value;
+            const password = document.getElementById('signPass').value;
+            const confirmPassword = document.getElementById('signPassConf').value;
+
+            apiCall(`${getAuthUrl()}/signup`, 'POST', {
+                name: name,
+                email: email,
+                password: password,
+                confirmPassword: confirmPassword
+            });
+        }
+
+        const createGame = () => {
+            const body = {
+                title: document.getElementById('pTitle').value,
+                company: document.getElementById('pCompany').value,
+                type: document.getElementById('pType').value,
+                rating: document.getElementById('pRating').value,
+                price: document.getElementById('pPrice').value,
+                // Add defaults for fields not in simple UI
+                releaseYear: 2024,
+                online: true
+            };
+            apiCall(`${getGameUrl()}/`, 'POST', body, true);
+        }
+
+        const updateGame = () => {
+            const id = document.getElementById('targetId').value;
+            if (!id) return alert("Paste an ID in section 4 first");
+
+            // Gather only non-empty fields
+            const body = {};
+            const title = document.getElementById('pTitle').value;
+            if (title) body.title = title;
+            // ... add other fields similarly if needed
+
+            apiCall(`${getGameUrl()}/${id}`, 'PATCH', body, true);
+        }
+
+        const deleteGame = () => {
+            const id = document.getElementById('targetId').value;
+            if (confirm(`Delete game ${id}?`)) {
+                apiCall(`${getGameUrl()}/${id}`, 'DELETE', null, true);
+            }
+        }
+
+        const showLoading = () => {
+            outputArea.classList.toggle('hidden');
+            loader.classList.toggle('hidden');
+        }
+    </script>
+</body>
+
+</html>
