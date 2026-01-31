@@ -1,10 +1,9 @@
-const User = require('../models/User');
+const env = process.env;
 const jwt = require('jsonwebtoken');
+const User = require('../models/User');
 
-const signToken = (id) => {
-    return jwt.sign({ id }, process.env.JWT_SECRET, {
-        expiresIn: process.env.JWT_EXPIRES_IN
-    });
+const createToken = (userId) => {
+    return jwt.sign({ userId }, env.JWT_KEY, { expiresIn: env.JWT_DURATION });
 };
 
 /**
@@ -21,14 +20,15 @@ exports.signup = async (req, res) => {
             confirmPassword: req.body.confirmPassword
         });
 
-        const token = signToken(newUser._id);
+        const token = createToken(newUser._id);
 
-        res.status(201).json({
-            status: 'success',
-            token: token
-        })
+        res.status(201).json({ status: 'success', token: token });
     } catch (err) {
-        res.status(400).json({ status: 'fail', message: err.message });
+        const isDuplicateKeyError = err.errorResponse?.code === 11000;        
+        res.status(400).json({ 
+            status: 'fail',
+            message: isDuplicateKeyError ? "Email already in use" : err.message 
+        });
     }
 }
 
@@ -50,7 +50,7 @@ exports.login = async (req, res) => {
             return res.status(401).json({ status: 'fail', message: 'Invalid email or password.' });
         }
 
-        const token = signToken(dbUser._id);
+        const token = createToken(dbUser._id);
 
         res.status(200).json({
             status: 'success',
@@ -70,23 +70,18 @@ exports.login = async (req, res) => {
  */
 exports.authorize = async (req, res, next) => {
     try {
-        let token;
+        let token = '';
 
         if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-            token = req.headers.authorization.split(' ')[1];
-            if (!token) {
-                return res.status(401).json({ status: 'fail', message: 'You are not logged in!' });
-            }
+            token = req.headers.authorization.remove('Bearer ');
+            if (!token) throw Error();
         }
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const decodedToken = jwt.verify(token, env.JWT_KEY);
+        const authorizedUser = await User.findById(decodedToken.userId);
+        if (!authorizedUser) return res.status(401).json({ status: 'fail', message: 'Invalid Token' });
 
-        const currentUser = await User.findById(decoded.id);
-        if (!currentUser) {
-            return res.status(401).json({ status: 'fail', message: 'Invalid Token' });
-        }
-
-        req.user = currentUser;
+        req.user = authorizedUser;
         next();
     } catch (err) {
         res.status(401).json({ status: 'fail', message: 'Invalid Token' });

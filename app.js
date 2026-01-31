@@ -3,12 +3,12 @@ const dotenv = require("dotenv");
 
 dotenv.config();
 
-const isDevelopment = process.env.NODE_ENV
+const isDevelopment = process.env.NODE_ENV;
 console.info('Environment: ', process.env.NODE_ENV);
 
 const db = process.env.DB
-    .replace("<db_username>", process.env.DB_USERNAME)
-    .replace("<db_password>", process.env.DB_PASSWORD)
+    .replace("<db_username>", process.env.DB_USER)
+    .replace("<db_password>", process.env.DB_PASS)
     .replace("<db_name>", isDevelopment ? '' : process.env.DB_NAME);
 
 mongoose
