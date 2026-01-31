@@ -409,9 +409,9 @@
         <div class="panel">
             <h3>⚙️ Configuration</h3>
             <label for="gamesUrl">Games URL</label>
-            <input type="text" id="baseUrl" value="http://localhost:8100/api/videogames">
+            <input type="text" id="baseUrl" value="http://localhost:3000/api/videogames">
             <label for="authUrl">Auth URL</label>
-            <input type="text" id="authUrl" value="http://localhost:8100/api/auth">
+            <input type="text" id="authUrl" value="http://localhost:3000/api/auth">
             <div style="font-size: 0.8rem; margin-top:5px;">
                 Auth Status: <span id="authBadge" style="color: red; font-weight: bold;">Not Logged In</span>
             </div>
@@ -603,7 +603,7 @@
                         </div>
                         <div class="tag-container">${tagsHtml}</div>
                         <div class="card-footer">
-                            <span class="price">$${game.price || '0.00'}</span>
+                            <span class="price">€${game.price || '0.00'}</span>
                             <button style="width: auto; padding: 4px 10px; font-size: 0.8rem;" onclick="selectGame('${game._id}')">View ID</button>
                         </div>
                     </div>
@@ -690,11 +690,13 @@
             const maxR = document.getElementById('sMaxRate').value;
 
             // Build Query String manually
-            let q = '?';
+            let q = '';
             if (title) q += `title=${title}&`;
             if (minR) q += `minRating=${minR}&`;
             if (maxR) q += `maxRating=${maxR}&`;
 
+            if (q)
+                q = '?' + q;
             apiCall(`${getGameUrl()}/search${q}`, 'GET');
         }
 

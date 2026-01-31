@@ -8,12 +8,13 @@ const router = express.Router();
 router.route('/top-5-rated').get(gamesController.getTop5VideoGames);
 router.route('/by-type').get(gamesController.getVideoGamesByType)
 router.route('/all-videogames').get(gamesController.getAllVideoGames);
-router.route('/:id').get(gamesController.getVideoGameById);
 router.route('/search').get(gamesController.searchVideoGames);
+router.route('/:id').get(gamesController.getVideoGameById);
 
 //Protected
-router.post('/', authController.protect, gamesController.insertVideoGame);
-router.patch('/:id', authController.protect, gamesController.updateVideoGame);
-router.delete('/:id', authController.protect, gamesController.deleteVideoGame);
+router.post('/', authController.authorize, gamesController.insertVideoGame);
+router.route('/:id')
+    .patch(authController.authorize, gamesController.updateVideoGame)
+    .delete(authController.authorize, gamesController.deleteVideoGame);
 
 module.exports = router;

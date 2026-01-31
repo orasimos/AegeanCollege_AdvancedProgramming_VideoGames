@@ -7,6 +7,11 @@ const signToken = (id) => {
     });
 };
 
+/**
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ */
 exports.signup = async (req, res) => {
     try {
         const newUser = await User.create({
@@ -27,6 +32,12 @@ exports.signup = async (req, res) => {
     }
 }
 
+/**
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.login = async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -50,7 +61,14 @@ exports.login = async (req, res) => {
     }
 }
 
-exports.protect = async (req, res, next) => {
+/**
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ * @param {*} next 
+ * @returns 
+ */
+exports.authorize = async (req, res, next) => {
     try {
         let token;
 

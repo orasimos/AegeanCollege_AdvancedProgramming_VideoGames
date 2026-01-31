@@ -1,5 +1,10 @@
 const VideoGame = require("../models/VideoGame");
 
+/**
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ */
 exports.getTop5VideoGames = async (req, res) => {
     try {
         const top5Games = await VideoGame.find()
@@ -17,6 +22,11 @@ exports.getTop5VideoGames = async (req, res) => {
     }
 }
 
+/**
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ */
 exports.getVideoGamesByType = async (req, res) => {
     try {
         const videogames = await VideoGame.aggregate([
@@ -42,6 +52,11 @@ exports.getVideoGamesByType = async (req, res) => {
     }
 }
 
+/**
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ */
 exports.getAllVideoGames = async (req, res) => {
     try {
         const games = await VideoGame.find();
@@ -56,6 +71,12 @@ exports.getAllVideoGames = async (req, res) => {
     }
 }
 
+/**
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.insertVideoGame = async (req, res) => {
     try {
         const newGame = await VideoGame.create(req.body);
@@ -72,6 +93,12 @@ exports.insertVideoGame = async (req, res) => {
     }
 }
 
+/**
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.getVideoGameById = async (req, res) => {
     console.log(req)
     try {
@@ -90,6 +117,12 @@ exports.getVideoGameById = async (req, res) => {
     }
 }
 
+/**
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.searchVideoGames = async (req, res) => {
     try {
         const {
@@ -163,7 +196,11 @@ exports.searchVideoGames = async (req, res) => {
         if (multiplayerModes) filter.multiplayerModes = { $all: multiplayerModes.split(',').map(s => s.trim()) };
         if (languages) filter.languages = { $all: languages.split(',').map(s => s.trim()) };
         if (awards) filter.awards = { $all: awards.split(',').map(s => s.trim()) };
-        
+
+        if (!Object.keys(filter).length) {
+            console.log(Object.keys(filter).length)
+            return await this.getAllVideoGames(req, res);
+        }
 
         let query = VideoGame.find(filter);
         if (sort) {
@@ -185,6 +222,12 @@ exports.searchVideoGames = async (req, res) => {
     }
 }
 
+/**
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.updateVideoGame = async (req, res) => {
     try {
         const updatedGame = await VideoGame.findByIdAndUpdate(req.params.id, req.body, {
@@ -205,6 +248,12 @@ exports.updateVideoGame = async (req, res) => {
     }
 }
 
+/**
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.deleteVideoGame = async (req, res) => {
     try {
         const deletedGame = await VideoGame.findByIdAndDelete(req.params.id);
