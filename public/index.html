@@ -19,7 +19,7 @@
             }
 
             body {
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
                 background-color: var(--bg);
                 color: var(--text-main);
                 margin: 0;
@@ -69,12 +69,16 @@
                 box-sizing: border-box;
             }
 
-            input[type='checkbox'] {
+            input[type="checkbox"] {
                 width: 20px;
                 height: 20px;
                 border: 1px solid var(--text-muted);
-                content: '';
+                content: "";
                 /* flex: 0 !important; */
+            }
+
+            option[value=""] {
+                color: var(--text-muted);
             }
 
             .row {
@@ -343,7 +347,7 @@
             }
 
             .loader:before {
-                content: '';
+                content: "";
                 position: absolute;
                 width: 8px;
                 height: 12px;
@@ -356,7 +360,7 @@
             }
 
             .loader:after {
-                content: '';
+                content: "";
                 position: absolute;
                 inset: 0 0 auto auto;
                 width: 8px;
@@ -450,6 +454,11 @@
                     <input type="text" id="authUrl" value="http://localhost:3000/api/auth" />
                 </div>
                 <div style="font-size: 0.8rem; margin-top: 5px">Auth Status: <span id="authBadge" style="color: red; font-weight: bold">Not Logged In</span></div>
+
+                <label for="miscUrl">Misc URL</label>
+                <div class="row">
+                    <input type="text" id="miscUrl" value="http://localhost:3000/api/misc" />
+                </div>
             </div>
 
             <div class="panel">
@@ -508,17 +517,18 @@
                 </div>
                 <div class="row">
                     <select id="search-company">
-                        <option value="">Select company...</option>
+                        <option value="" selected>Select company...</option>
                     </select>
                 </div>
                 <div class="row">
                     <select id="search-type">
-                        <option value="">Select type...</option>
+                        <option value="" selected>Select type...</option>
                     </select>
                 </div>
                 <div class="row">
-                    <label for="search-consoles">Console</label>
-                    <select id="search-consoles"></select>
+                    <select id="search-consoles" multiple>
+                        <option value="" selected>Select console...</option>
+                    </select>
                 </div>
 
                 <!-- 
@@ -585,24 +595,25 @@
             let authToken = null;
 
             // --- UTILS ---
-            const getGameUrl = () => document.getElementById('baseUrl').value.replace(/\/$/, '');
-            const getAuthUrl = () => document.getElementById('authUrl').value.replace(/\/$/, '');
+            const getGameUrl = () => document.getElementById("baseUrl").value.replace(/\/$/, "");
+            const getAuthUrl = () => document.getElementById("authUrl").value.replace(/\/$/, "");
+            const getMiscUrl = () => document.getElementById("miscUrl").value.replace(/\/$/, "");
 
-            const outputArea = document.getElementById('output');
-            const loader = document.getElementById('loader');
+            const outputArea = document.getElementById("output");
+            const loader = document.getElementById("loader");
 
             function setStatus(method, url) {
-                document.getElementById('statusMethod').innerText = method;
-                document.getElementById('statusUrl').innerText = url;
+                document.getElementById("statusMethod").innerText = method;
+                document.getElementById("statusUrl").innerText = url;
             }
 
             // --- MAIN RENDERER ---
             function render(data) {
-                const container = document.getElementById('output');
-                container.innerHTML = '';
+                const container = document.getElementById("output");
+                container.innerHTML = "";
 
                 // 1. Error Handling
-                if (data.status === 'fail' || data.status === 'error') {
+                if (data.status === "fail" || data.status === "error") {
                     container.innerHTML = `
                     <div class="panel" style="border-left: 5px solid red;">
                         <h2 style="color:red">Error</h2>
@@ -615,9 +626,9 @@
                 // 2. Auth Success
                 if (data.token) {
                     authToken = data.token;
-                    sessionStorage.setItem('GamesToken', data.token);
-                    document.getElementById('authBadge').innerText = 'Logged In';
-                    document.getElementById('authBadge').style.color = 'green';
+                    sessionStorage.setItem("GamesToken", data.token);
+                    document.getElementById("authBadge").innerText = "Logged In";
+                    document.getElementById("authBadge").style.color = "green";
                     container.innerHTML = `
                     <div class="panel" style="border-left: 5px solid green;">
                         <h2>Authentication Successful</h2>
@@ -630,8 +641,8 @@
 
                 // 3. List of Games (Array)
                 if (data.data && data.data.games && Array.isArray(data.data.games)) {
-                    const grid = document.createElement('div');
-                    grid.className = 'game-grid';
+                    const grid = document.createElement("div");
+                    grid.className = "game-grid";
 
                     if (data.data.games.length === 0) {
                         container.innerHTML = `<h3>No games found matching criteria.</h3>`;
@@ -659,10 +670,10 @@
 
             function createGameCard(game) {
                 // Fallback image if none provided
-                const img = game.images && game.images.length > 0 ? game.images[0] : 'https://placehold.co/400x300?text=No+Image';
+                const img = game.images && game.images.length > 0 ? game.images[0] : "https://placehold.co/400x300?text=No+Image";
 
                 // Generate tags
-                let tagsHtml = '';
+                let tagsHtml = "";
                 if (game.genreTags) game.genreTags.forEach((t) => (tagsHtml += `<span class="tag genre">${t}</span>`));
                 if (game.consoles) game.consoles.forEach((c) => (tagsHtml += `<span class="tag console">${c}</span>`));
 
@@ -672,15 +683,15 @@
                     <div class="card-body">
                         <div class="card-header">
                             <h4 class="card-title">${game.title}</h4>
-                            <span class="rating-badge">★ ${game.rating || '-'}</span>
+                            <span class="rating-badge">★ ${game.rating || "-"}</span>
                         </div>
                         <div class="meta-row">
-                            <span>${game.company || 'Unknown Dev'}</span>
-                            <span>${game.releaseYear || ''}</span>
+                            <span>${game.company || "Unknown Dev"}</span>
+                            <span>${game.releaseYear || ""}</span>
                         </div>
                         <div class="tag-container">${tagsHtml}</div>
                         <div class="card-footer">
-                            <span class="price">€${game.price || '0.00'}</span>
+                            <span class="price">€${game.price || "0.00"}</span>
                             <button style="width: auto; padding: 4px 10px; font-size: 0.8rem;" onclick="selectGame('${game._id}')">View ID</button>
                         </div>
                     </div>
@@ -689,7 +700,7 @@
             }
 
             function createDetailView(game) {
-                const img = game.images && game.images.length > 0 ? game.images[0] : 'https://placehold.co/400x300?text=No+Image';
+                const img = game.images && game.images.length > 0 ? game.images[0] : "https://placehold.co/400x300?text=No+Image";
 
                 return `
                 <div class="detail-view">
@@ -701,8 +712,8 @@
                                 <span class="rating-badge" style="font-size: 1rem; padding: 5px 10px;">★ ${game.rating}</span>
                                 <span class="tag" style="font-size: 1rem; margin-left: 10px;">${game.type}</span>
                             </div>
-                            <p>${game.description || 'No description available.'}</p>
-                            ${game.metacriticURL ? `<a href="${game.metacriticURL}" target="_blank" style="color: var(--primary); text-decoration: none;">Read Metacritic Review &rarr;</a>` : ''}
+                            <p>${game.description || "No description available."}</p>
+                            ${game.metacriticURL ? `<a href="${game.metacriticURL}" target="_blank" style="color: var(--primary); text-decoration: none;">Read Metacritic Review &rarr;</a>` : ""}
                         </div>
                     </div>
 
@@ -712,8 +723,8 @@
                         <div class="detail-item"><strong>Price</strong> $${game.price}</div>
                         <div class="detail-item"><strong>Difficulty</strong> ${game.difficulty}</div>
                         <div class="detail-item"><strong>Completion Time</strong> ${game.completionTime} hours</div>
-                        <div class="detail-item"><strong>Online</strong> ${game.online ? '✅ Yes' : '❌ No'}</div>
-                        <div class="detail-item"><strong>Consoles</strong> ${game.consoles ? game.consoles.join(', ') : '-'}</div>
+                        <div class="detail-item"><strong>Online</strong> ${game.online ? "✅ Yes" : "❌ No"}</div>
+                        <div class="detail-item"><strong>Consoles</strong> ${game.consoles ? game.consoles.join(", ") : "-"}</div>
                         <div class="detail-item"><strong>ID</strong> <span style="font-family:monospace">${game._id}</span></div>
                     </div>
                 </div>
@@ -722,7 +733,7 @@
 
             function selectGame(id) {
                 // Puts ID in the input box for easy update/delete
-                document.getElementById('targetId').value = id;
+                document.getElementById("targetId").value = id;
             }
 
             // --- API LOGIC ---
@@ -731,9 +742,9 @@
                 showLoading();
                 setStatus(method, url);
 
-                const headers = { 'Content-Type': 'application/json' };
-                const token = sessionStorage.getItem('GamesToken');
-                if (secure && token) headers['Authorization'] = `Bearer ${token}`;
+                const headers = { "Content-Type": "application/json" };
+                const token = sessionStorage.getItem("GamesToken");
+                if (secure && token) headers["Authorization"] = `Bearer ${token}`;
 
                 const opts = { method, headers };
                 if (body) opts.body = JSON.stringify(body);
@@ -741,108 +752,143 @@
                 try {
                     const res = await fetch(url, opts);
                     if (res.status === 204) {
-                        render({ message: 'Deleted Successfully (204 No Content)' });
+                        render({ message: "Deleted Successfully (204 No Content)" });
                         return;
                     }
                     const data = await res.json();
                     render(data);
                 } catch (e) {
-                    render({ status: 'error', message: e.message });
+                    render({ status: "error", message: e.message });
                 } finally {
                     showLoading();
                 }
             }
 
-            async function loadData() {
-                let response = await fetch(`${getGameUrl()}/companies`);
+            async function loadCompanies() {
+                let response = await fetch(`${getMiscUrl()}/companies`);
                 const companies = (await response.json())?.data?.companies;
-                const dropDown = document.getElementById('search-company');
+                const dropDown = document.getElementById("search-company");
                 companies.forEach((company) => {
-                    const option = document.createElement('option');
+                    const option = document.createElement("option");
                     option.value = company;
                     option.textContent = company;
                     dropDown.appendChild(option);
                 });
             }
 
+            async function loadTypes() {
+                let response = await fetch(`${getMiscUrl()}/types`);
+                const types = (await response.json())?.data?.types;
+                const dropDown = document.getElementById("search-type");
+                types.forEach((type) => {
+                    const option = document.createElement("option");
+                    option.value = type;
+                    option.textContent = type;
+                    dropDown.appendChild(option);
+                });
+            }
+
+            async function loadConsoles() {
+                let response = await fetch(`${getMiscUrl()}/consoles`);
+                const consoles = (await response.json())?.data?.types;
+                const dropDown = document.getElementById("search-console");
+                types.forEach((console) => {
+                    const option = document.createElement("option");
+                    option.value = console;
+                    option.textContent = console;
+                    dropDown.appendChild(option);
+                });
+            }
+
             // Wrappers
-            const fetchApi = (endpoint) => apiCall(`${getGameUrl()}${endpoint}`, 'GET');
+            const fetchApi = (endpoint) => apiCall(`${getGameUrl()}${endpoint}`, "GET");
             const fetchById = () => {
-                const id = document.getElementById('targetId').value;
-                if (!id) return alert('ID Required');
-                apiCall(`${getGameUrl()}/${id}`, 'GET');
+                const id = document.getElementById("targetId").value;
+                if (!id) return alert("ID Required");
+                apiCall(`${getGameUrl()}/${id}`, "GET");
+            };
+
+            const getSelectedValues = (selectedId) => {
+                const select = document.getElementById(selectedId);
+                const values = Array.from(select.selectedOptions)
+                    .map((option) => option.value)
+                    .filter((val) => val !== "");
+
+                return values.join(",");
             };
 
             const doSearch = () => {
-                console.log('afhabsgja gkliaugbn akig ba skgjh');
-                const title = document.getElementById('search-title')?.value;
-                const minRating = document.getElementById('search-minRating')?.value;
-                const maxRating = document.getElementById('search-maxRating')?.value;
-                const minReleaseYear = document.getElementById('search-minReleaseYear')?.value;
-                const maxReleaseYear = document.getElementById('search-maxReleaseYear')?.value;
-                const online = document.getElementById('search-online')?.checked;
-                const availableOnStore = document.getElementById('search-availableOnStore')?.value;
-                const company = document.getElementById('search-company')?.value;
-                const type = document.getElementById('search-type')?.value;
-                const consoles = document.getElementById('search-consoles')?.value;
-                const minCompletionTime = document.getElementById('search-minCompletionTime')?.value;
-                const maxCompletionTime = document.getElementById('search-maxCompletionTime')?.value;
-                const minPrice = document.getElementById('search-minPrice')?.value;
-                const maxPrice = document.getElementById('search-maxPrice')?.value;
+                const title = document.getElementById("search-title")?.value;
+                const minRating = document.getElementById("search-minRating")?.value;
+                const maxRating = document.getElementById("search-maxRating")?.value;
+                const minReleaseYear = document.getElementById("search-minReleaseYear")?.value;
+                const maxReleaseYear = document.getElementById("search-maxReleaseYear")?.value;
+                const online = document.getElementById("search-online")?.checked;
+                const availableOnStore = document.getElementById("search-availableOnStore")?.value;
+                const company = getSelectedValues("search-company");
+                const type = getSelectedValues("search-type");
+                const consoles = getSelectedValues("search-consoles");
+                const minCompletionTime = document.getElementById("search-minCompletionTime")?.value;
+                const maxCompletionTime = document.getElementById("search-maxCompletionTime")?.value;
+                const minPrice = document.getElementById("search-minPrice")?.value;
+                const maxPrice = document.getElementById("search-maxPrice")?.value;
 
                 // Build Query String manually
-                let q = '';
-                if (title) q += `title=${title}&`;
-                if (minRating) q += `minRating=${minRating}&`;
-                if (maxRating) q += `maxRating=${maxRating}&`;
-                if (minReleaseYear) q += `minReleaseYear=${minReleaseYear}&`;
-                if (maxReleaseYear) q += `maxReleaseYear=${maxReleaseYear}&`;
-                if (online) q += `online=${online}`;
-                if (availableOnStore) q += `availableOnStore=${availableOnStore}`;
-                if (company) q += `company=${company}`;
-                if (type) q += `type=${company}`;
-                if (consoles) q += `consoles=${consoles}`;
-                if (minCompletionTime) q += `minCompletionTime=${minCompletionTime}`;
-                if (maxCompletionTime) q += `minCompletionTime=${minCompletionTime}`;
-                if (minPrice) q += `minPrice=${minPrice}`;
-                if (maxPrice) q += `maxPrice=${maxPrice}`;
+                let q = "";
+                if (title) q += `&title=${title}&`;
+                if (minRating) q += `&minRating=${minRating}&`;
+                if (maxRating) q += `&maxRating=${maxRating}&`;
+                if (minReleaseYear) q += `&minReleaseYear=${minReleaseYear}&`;
+                if (maxReleaseYear) q += `&maxReleaseYear=${maxReleaseYear}&`;
+                if (online) q += `&online=${online}`;
+                if (availableOnStore) q += `&availableOnStore=${availableOnStore}`;
+                if (company) q += `&company=${company}`;
+                if (type) q += `&type=${type}`;
+                if (consoles) q += `&consoles=${consoles}`;
+                if (minCompletionTime) q += `&minCompletionTime=${minCompletionTime}`;
+                if (maxCompletionTime) q += `&minCompletionTime=${minCompletionTime}`;
+                if (minPrice) q += `&minPrice=${minPrice}`;
+                if (maxPrice) q += `&maxPrice=${maxPrice}`;
 
-                if (q) q = '?' + q;
-                apiCall(`${getGameUrl()}/search${q}`, 'GET');
+                if (q) {
+                    if (q.startsWith("&")) q = q.substring(1);
+                    q = "?" + q;
+                }
+                apiCall(`${getGameUrl()}/search${q}`, "GET");
             };
 
             const toggleAuth = (tab) => {
-                const loginForm = document.getElementById('loginForm');
-                const signupForm = document.getElementById('signupForm');
-                const loginBtn = document.getElementById('tabLogin');
-                const signupBtn = document.getElementById('tabSignup');
+                const loginForm = document.getElementById("loginForm");
+                const signupForm = document.getElementById("signupForm");
+                const loginBtn = document.getElementById("tabLogin");
+                const signupBtn = document.getElementById("tabSignup");
 
-                if (tab === 'login') {
-                    loginForm.classList.remove('hidden');
-                    signupForm.classList.add('hidden');
-                    loginBtn.style.backgroundColor = 'var(--primary)';
-                    signupBtn.style.backgroundColor = '#9ca3af';
+                if (tab === "login") {
+                    loginForm.classList.remove("hidden");
+                    signupForm.classList.add("hidden");
+                    loginBtn.style.backgroundColor = "var(--primary)";
+                    signupBtn.style.backgroundColor = "#9ca3af";
                 } else {
-                    loginForm.classList.add('hidden');
-                    signupForm.classList.remove('hidden');
-                    loginBtn.style.backgroundColor = '#9ca3af';
-                    signupBtn.style.backgroundColor = 'var(--success)';
+                    loginForm.classList.add("hidden");
+                    signupForm.classList.remove("hidden");
+                    loginBtn.style.backgroundColor = "#9ca3af";
+                    signupBtn.style.backgroundColor = "var(--success)";
                 }
             };
 
             const login = () => {
-                const email = document.getElementById('loginEmail').value;
-                const password = document.getElementById('loginPass').value;
-                apiCall(`${getAuthUrl()}/login`, 'POST', { email: email, password: password });
+                const email = document.getElementById("loginEmail").value;
+                const password = document.getElementById("loginPass").value;
+                apiCall(`${getAuthUrl()}/login`, "POST", { email: email, password: password });
             };
 
             const signup = () => {
-                const name = document.getElementById('signName').value;
-                const email = document.getElementById('signEmail').value;
-                const password = document.getElementById('signPass').value;
-                const confirmPassword = document.getElementById('signPassConf').value;
+                const name = document.getElementById("signName").value;
+                const email = document.getElementById("signEmail").value;
+                const password = document.getElementById("signPass").value;
+                const confirmPassword = document.getElementById("signPassConf").value;
 
-                apiCall(`${getAuthUrl()}/signup`, 'POST', {
+                apiCall(`${getAuthUrl()}/signup`, "POST", {
                     name: name,
                     email: email,
                     password: password,
@@ -852,44 +898,46 @@
 
             const createGame = () => {
                 const body = {
-                    title: document.getElementById('pTitle').value,
-                    company: document.getElementById('pCompany').value,
-                    type: document.getElementById('pType').value,
-                    rating: document.getElementById('pRating').value,
-                    price: document.getElementById('pPrice').value,
+                    title: document.getElementById("pTitle").value,
+                    company: document.getElementById("pCompany").value,
+                    type: document.getElementById("pType").value,
+                    rating: document.getElementById("pRating").value,
+                    price: document.getElementById("pPrice").value,
                     // Add defaults for fields not in simple UI
                     releaseYear: 2024,
                     online: true,
                 };
-                apiCall(`${getGameUrl()}/`, 'POST', body, true);
+                apiCall(`${getGameUrl()}/`, "POST", body, true);
             };
 
             const updateGame = () => {
-                const id = document.getElementById('targetId').value;
-                if (!id) return alert('Paste an ID in section 4 first');
+                const id = document.getElementById("targetId").value;
+                if (!id) return alert("Paste an ID in section 4 first");
 
                 // Gather only non-empty fields
                 const body = {};
-                const title = document.getElementById('pTitle').value;
+                const title = document.getElementById("pTitle").value;
                 if (title) body.title = title;
                 // ... add other fields similarly if needed
 
-                apiCall(`${getGameUrl()}/${id}`, 'PATCH', body, true);
+                apiCall(`${getGameUrl()}/${id}`, "PATCH", body, true);
             };
 
             const deleteGame = () => {
-                const id = document.getElementById('targetId').value;
+                const id = document.getElementById("targetId").value;
                 if (confirm(`Delete game ${id}?`)) {
-                    apiCall(`${getGameUrl()}/${id}`, 'DELETE', null, true);
+                    apiCall(`${getGameUrl()}/${id}`, "DELETE", null, true);
                 }
             };
 
             const showLoading = () => {
-                outputArea.classList.toggle('hidden');
-                loader.classList.toggle('hidden');
+                outputArea.classList.toggle("hidden");
+                loader.classList.toggle("hidden");
             };
 
-            window.onload = loadData();
+            window.onload = loadCompanies();
+            window.onload = loadTypes();
+            window.onload = loadConsoles();
         </script>
     </body>
 </html>

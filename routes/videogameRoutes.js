@@ -4,10 +4,6 @@ const authController = require("../controllers/authController");
 
 const router = express.Router();
 
-router.route('/companies').get(gamesController.getCompanies);
-router.route('/types').get(gamesController.getTypes);
-router.route('/consoles').get(gamesController.getConsoles);
-
 //Public
 router.route('/top-5-rated').get(gamesController.getTop5VideoGames);
 router.route('/by-type').get(gamesController.getVideoGamesByType)

@@ -188,9 +188,9 @@ exports.searchVideoGames = async (req, res) => {
         if (availableOnStore !== undefined) filter.availableOnStore = availableOnStore;
 
         if (company) filter.company = company;
-        if (type) filter.type = type;
         if (difficulty) filter.difficulty = difficulty;
         
+        if (type) filter.type = { $all: type.split(',').map(s => s.trim()) };
         if (consoles) filter.consoles = { $all: consoles.split(',').map(s => s.trim()) };
         if (genreTags) filter.genreTags = { $all: genreTags.split(',').map(s => s.trim()) };
         if (multiplayerModes) filter.multiplayerModes = { $all: multiplayerModes.split(',').map(s => s.trim()) };
@@ -268,32 +268,5 @@ exports.deleteVideoGame = async (req, res) => {
         })
     } catch (err) {
         res.status(400).json({ status: 'fail', message: err.message });
-    }
-}
-
-exports.getCompanies = async (req, res) => {
-    try {
-        const companies = await VideoGame.distinct('company');
-        return res.status(200).json({ status: 'success', data: { companies: companies } })
-    } catch (err) {
-        return res.status(500).json({ status: 'failed' });
-    }
-}
-
-exports.getTypes = async (req, res) => {
-    try {
-        const types = await VideoGame.distinct('type');
-        return res.status(200).json({ status: 'success', data: { types: types } })
-    } catch (err) {
-        return res.status(500).json({ status: 'failed' });
-    }
-}
-
-exports.getConsoles = async (req, res) => {
-    try {
-        const consoles = await VideoGame.distinct('type');
-        return res.status(200).json({ status: 'success', data: { consoles: consoles } })
-    } catch (err) {
-        return res.status(500).json({ status: 'failed' });
     }
 }
