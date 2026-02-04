@@ -7,13 +7,12 @@ dotenv.config();
 
 const json = "./data/video_games_dataset.json";
 
-const initializeVideoGames = async () => {
-    try {
-        const initialize = process.argv.includes("--initialize");
+const initializeVideoGames = async (initialize) => {
+    try {        
         const gamesCount = await VideoGame.countDocuments();
         const usersCount = await User.countDocuments();
 
-        if (!initialize) return;
+        if (gamesCount > 0 && !initialize) return;
 
         console.info("Initializing database...");
         if (gamesCount > 0) {

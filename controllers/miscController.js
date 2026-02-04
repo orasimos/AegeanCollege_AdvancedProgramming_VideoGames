@@ -20,7 +20,7 @@ exports.getTypes = async (req, res) => {
 
 exports.getConsoles = async (req, res) => {
     try {
-        const consoles = await VideoGame.distinct('console');
+        const consoles = await VideoGame.distinct('consoles');
         return res.status(200).json({ status: 'success', data: { consoles: consoles } })
     } catch (err) {
         return res.status(500).json({ status: 'failed' });

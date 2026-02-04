@@ -8,3 +8,6 @@ router.route('/types').get(miscController.getTypes);
 router.route('/consoles').get(miscController.getConsoles);
 
 module.exports = router;
+
+
+

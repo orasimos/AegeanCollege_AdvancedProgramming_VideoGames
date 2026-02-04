@@ -87,10 +87,6 @@
                 margin-bottom: 8px;
             }
 
-            .row input {
-                /* flex: 1; */
-            }
-
             .row.checkbox {
                 display: grid;
                 grid-template-columns: 1fr 1fr;
@@ -104,6 +100,11 @@
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
+
+                label {
+                    font-size: 14px;
+                    color: var(--text-muted);
+                }
             }
 
             button {
@@ -452,13 +453,12 @@
                 <label for="authUrl">Auth URL</label>
                 <div class="row">
                     <input type="text" id="authUrl" value="http://localhost:3000/api/auth" />
-                </div>
-                <div style="font-size: 0.8rem; margin-top: 5px">Auth Status: <span id="authBadge" style="color: red; font-weight: bold">Not Logged In</span></div>
+                </div>               
 
                 <label for="miscUrl">Misc URL</label>
                 <div class="row">
                     <input type="text" id="miscUrl" value="http://localhost:3000/api/misc" />
-                </div>
+                </div>                
             </div>
 
             <div class="panel">
@@ -481,12 +481,14 @@
                     <div class="form-group row"><input type="password" id="signPassConf" placeholder="Confirm Password" /></div>
                     <button class="success" onclick="signup()">Sign Up</button>
                 </div>
+
+                <div style="font-size: 0.8rem; margin-top: 10px">Auth Status: <span id="authBadge" style="color: red; font-weight: bold">Not Logged In</span></div>
             </div>
 
             <div class="panel">
                 <h3>🔍 Search & Filter</h3>
                 <div class="row">
-                    <button onclick="fetchApi('/all-videogames')">Get All</button>
+                    <button onclick="fetchApi('')">Get All</button>
                 </div>
                 <hr class="fine-divider" />
                 <div class="row">
@@ -526,16 +528,18 @@
                     </select>
                 </div>
                 <div class="row">
-                    <select id="search-consoles" multiple>
-                        <option value="" selected>Select console...</option>
+                    <select id="search-consoles" multiple style="height: 260px">
+                        <option value="" selected>Any Console...</option>
                     </select>
                 </div>
-
-                <!-- 
-            const minCompletionTime = document.getElementById('search-minCompletionTime').value;
-            const maxCompletionTime = document.getElementById('search-maxCompletionTime').value;
-            const minPrice = document.getElementById('search-minPrice').value;
-            const maxPrice = document.getElementById('search-maxPrice').value; -->
+                <div class="row">
+                    <input type="number" id="search-minCompletionTime" min="0" max="1000" placeholder="Min Completion Time" />
+                    <input type="number" id="search-maxCompletionTime" min="0" max="1000" placeholder="Max Completion Time" />
+                </div>
+                <div class="row">
+                    <input type="number" id="search-minPrice" min="0" max="1000" placeholder="Min price..." />
+                    <input type="number" id="search-maxPrice" min="0" max="1000" placeholder="Max price..." />
+                </div>
 
                 <div class="row">
                     <button onclick="doSearch()">Search</button>
@@ -543,17 +547,10 @@
             </div>
 
             <div class="panel">
-                <h3>🕹️ Single Game Actions</h3>
+                <h3>📝 Create / Update / Delete</h3>
                 <div class="row">
                     <input type="text" id="targetId" placeholder="Paste Game ID Here..." />
                 </div>
-                <div class="row">
-                    <button class="danger" onclick="deleteGame()">Delete</button>
-                </div>
-            </div>
-
-            <div class="panel">
-                <h3>📝 Create / Update</h3>
                 <div class="row">
                     <input type="text" id="pTitle" placeholder="Title" />
                 </div>
@@ -568,6 +565,9 @@
                 <div class="row">
                     <button class="success" onclick="createGame()">Create New</button>
                     <button class="warning" onclick="updateGame()">Update (Use ID)</button>
+                </div>
+                <div class="row">
+                    <button class="danger" onclick="deleteGame()">Delete</button>
                 </div>
             </div>
         </div>
@@ -591,10 +591,8 @@
         </div>
 
         <script>
-            // --- STATE ---
             let authToken = null;
 
-            // --- UTILS ---
             const getGameUrl = () => document.getElementById("baseUrl").value.replace(/\/$/, "");
             const getAuthUrl = () => document.getElementById("authUrl").value.replace(/\/$/, "");
             const getMiscUrl = () => document.getElementById("miscUrl").value.replace(/\/$/, "");
@@ -607,39 +605,35 @@
                 document.getElementById("statusUrl").innerText = url;
             }
 
-            // --- MAIN RENDERER ---
             function render(data) {
                 const container = document.getElementById("output");
                 container.innerHTML = "";
 
-                // 1. Error Handling
                 if (data.status === "fail" || data.status === "error") {
                     container.innerHTML = `
-                    <div class="panel" style="border-left: 5px solid red;">
-                        <h2 style="color:red">Error</h2>
-                        <p>${data.message}</p>
-                    </div>
-                `;
+                        <div class="panel" style="border-left: 5px solid red;">
+                            <h2 style="color:red">Error</h2>
+                            <p>${data.message}</p>
+                        </div>
+                    `;
                     return;
                 }
 
-                // 2. Auth Success
                 if (data.token) {
                     authToken = data.token;
                     sessionStorage.setItem("GamesToken", data.token);
                     document.getElementById("authBadge").innerText = "Logged In";
                     document.getElementById("authBadge").style.color = "green";
                     container.innerHTML = `
-                    <div class="panel" style="border-left: 5px solid green;">
-                        <h2>Authentication Successful</h2>
-                        <p>Token saved. You can now use protected routes (Create, Update, Delete).</p>
-                        <div class="raw-json">${JSON.stringify(data, null, 2)}</div>
-                    </div>
-                `;
+                        <div class="panel" style="border-left: 5px solid green;">
+                            <h2>Authentication Successful</h2>
+                            <p>Token saved. You can now use protected routes (Create, Update, Delete).</p>
+                            <div class="raw-json">${JSON.stringify(data, null, 2)}</div>
+                        </div>
+                    `;
                     return;
                 }
 
-                // 3. List of Games (Array)
                 if (data.data && data.data.games && Array.isArray(data.data.games)) {
                     const grid = document.createElement("div");
                     grid.className = "game-grid";
@@ -656,87 +650,78 @@
                     return;
                 }
 
-                // 4. Single Game (Object)
                 if (data.data && data.data.game) {
                     container.innerHTML = createDetailView(data.data.game);
                     return;
                 }
 
-                // 5. Fallback (Raw JSON for anything else)
                 container.innerHTML = `<div class="raw-json">${JSON.stringify(data, null, 2)}</div>`;
             }
 
-            // --- HTML GENERATORS ---
-
             function createGameCard(game) {
-                // Fallback image if none provided
                 const img = game.images && game.images.length > 0 ? game.images[0] : "https://placehold.co/400x300?text=No+Image";
 
-                // Generate tags
                 let tagsHtml = "";
                 if (game.genreTags) game.genreTags.forEach((t) => (tagsHtml += `<span class="tag genre">${t}</span>`));
                 if (game.consoles) game.consoles.forEach((c) => (tagsHtml += `<span class="tag console">${c}</span>`));
 
                 return `
-                <div class="game-card" onclick="selectGame('${game._id}')">
-                    <img src="${img}" class="card-img" alt="${game.title}">
-                    <div class="card-body">
-                        <div class="card-header">
-                            <h4 class="card-title">${game.title}</h4>
-                            <span class="rating-badge">★ ${game.rating || "-"}</span>
-                        </div>
-                        <div class="meta-row">
-                            <span>${game.company || "Unknown Dev"}</span>
-                            <span>${game.releaseYear || ""}</span>
-                        </div>
-                        <div class="tag-container">${tagsHtml}</div>
-                        <div class="card-footer">
-                            <span class="price">€${game.price || "0.00"}</span>
-                            <button style="width: auto; padding: 4px 10px; font-size: 0.8rem;" onclick="selectGame('${game._id}')">View ID</button>
+                    <div class="game-card" onclick="selectGame('${game._id}')">
+                        <img src="${img}" class="card-img" alt="${game.title}">
+                        <div class="card-body">
+                            <div class="card-header">
+                                <h4 class="card-title">${game.title}</h4>
+                                <span class="rating-badge">★ ${game.rating || "-"}</span>
+                            </div>
+                            <div class="meta-row">
+                                <span>${game.company || "Unknown Dev"}</span>
+                                <span>${game.releaseYear || ""}</span>
+                            </div>
+                            <div class="tag-container">${tagsHtml}</div>
+                            <div class="card-footer">
+                                <span class="price">€${game.price || "0.00"}</span>
+                                <button style="width: auto; padding: 4px 10px; font-size: 0.8rem;" onclick="selectGame('${game._id}')">View ID</button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            `;
+                `;
             }
 
             function createDetailView(game) {
                 const img = game.images && game.images.length > 0 ? game.images[0] : "https://placehold.co/400x300?text=No+Image";
 
                 return `
-                <div class="detail-view">
-                    <div class="detail-header">
-                        <img src="${img}" class="detail-cover">
-                        <div class="detail-info">
-                            <h1 style="color: var(--primary-dark)">${game.title}</h1>
-                            <div style="margin-bottom: 10px;">
-                                <span class="rating-badge" style="font-size: 1rem; padding: 5px 10px;">★ ${game.rating}</span>
-                                <span class="tag" style="font-size: 1rem; margin-left: 10px;">${game.type}</span>
+                    <div class="detail-view">
+                        <div class="detail-header">
+                            <img src="${img}" class="detail-cover">
+                            <div class="detail-info">
+                                <h1 style="color: var(--primary-dark)">${game.title}</h1>
+                                <div style="margin-bottom: 10px;">
+                                    <span class="rating-badge" style="font-size: 1rem; padding: 5px 10px;">★ ${game.rating}</span>
+                                    <span class="tag" style="font-size: 1rem; margin-left: 10px;">${game.type}</span>
+                                </div>
+                                <p>${game.description || "No description available."}</p>
+                                ${game.metacriticURL ? `<a href="${game.metacriticURL}" target="_blank" style="color: var(--primary); text-decoration: none;">Read Metacritic Review &rarr;</a>` : ""}
                             </div>
-                            <p>${game.description || "No description available."}</p>
-                            ${game.metacriticURL ? `<a href="${game.metacriticURL}" target="_blank" style="color: var(--primary); text-decoration: none;">Read Metacritic Review &rarr;</a>` : ""}
+                        </div>
+
+                        <div class="detail-grid">
+                            <div class="detail-item"><strong>Developer</strong> ${game.company}</div>
+                            <div class="detail-item"><strong>Release Year</strong> ${game.releaseYear}</div>
+                            <div class="detail-item"><strong>Price</strong> $${game.price}</div>
+                            <div class="detail-item"><strong>Difficulty</strong> ${game.difficulty}</div>
+                            <div class="detail-item"><strong>Completion Time</strong> ${game.completionTime} hours</div>
+                            <div class="detail-item"><strong>Online</strong> ${game.online ? "✅ Yes" : "❌ No"}</div>
+                            <div class="detail-item"><strong>Consoles</strong> ${game.consoles ? game.consoles.join(", ") : "-"}</div>
+                            <div class="detail-item"><strong>ID</strong> <span style="font-family:monospace">${game._id}</span></div>
                         </div>
                     </div>
-
-                    <div class="detail-grid">
-                        <div class="detail-item"><strong>Developer</strong> ${game.company}</div>
-                        <div class="detail-item"><strong>Release Year</strong> ${game.releaseYear}</div>
-                        <div class="detail-item"><strong>Price</strong> $${game.price}</div>
-                        <div class="detail-item"><strong>Difficulty</strong> ${game.difficulty}</div>
-                        <div class="detail-item"><strong>Completion Time</strong> ${game.completionTime} hours</div>
-                        <div class="detail-item"><strong>Online</strong> ${game.online ? "✅ Yes" : "❌ No"}</div>
-                        <div class="detail-item"><strong>Consoles</strong> ${game.consoles ? game.consoles.join(", ") : "-"}</div>
-                        <div class="detail-item"><strong>ID</strong> <span style="font-family:monospace">${game._id}</span></div>
-                    </div>
-                </div>
-            `;
+                `;
             }
 
             function selectGame(id) {
-                // Puts ID in the input box for easy update/delete
                 document.getElementById("targetId").value = id;
             }
-
-            // --- API LOGIC ---
 
             async function apiCall(url, method, body = null, secure = false) {
                 showLoading();
@@ -790,9 +775,9 @@
 
             async function loadConsoles() {
                 let response = await fetch(`${getMiscUrl()}/consoles`);
-                const consoles = (await response.json())?.data?.types;
-                const dropDown = document.getElementById("search-console");
-                types.forEach((console) => {
+                const consoles = (await response.json())?.data?.consoles;
+                const dropDown = document.getElementById("search-consoles");
+                consoles.forEach((console) => {
                     const option = document.createElement("option");
                     option.value = console;
                     option.textContent = console;
@@ -800,7 +785,6 @@
                 });
             }
 
-            // Wrappers
             const fetchApi = (endpoint) => apiCall(`${getGameUrl()}${endpoint}`, "GET");
             const fetchById = () => {
                 const id = document.getElementById("targetId").value;
@@ -833,7 +817,6 @@
                 const minPrice = document.getElementById("search-minPrice")?.value;
                 const maxPrice = document.getElementById("search-maxPrice")?.value;
 
-                // Build Query String manually
                 let q = "";
                 if (title) q += `&title=${title}&`;
                 if (minRating) q += `&minRating=${minRating}&`;
@@ -903,7 +886,6 @@
                     type: document.getElementById("pType").value,
                     rating: document.getElementById("pRating").value,
                     price: document.getElementById("pPrice").value,
-                    // Add defaults for fields not in simple UI
                     releaseYear: 2024,
                     online: true,
                 };
@@ -914,11 +896,9 @@
                 const id = document.getElementById("targetId").value;
                 if (!id) return alert("Paste an ID in section 4 first");
 
-                // Gather only non-empty fields
                 const body = {};
                 const title = document.getElementById("pTitle").value;
                 if (title) body.title = title;
-                // ... add other fields similarly if needed
 
                 apiCall(`${getGameUrl()}/${id}`, "PATCH", body, true);
             };
