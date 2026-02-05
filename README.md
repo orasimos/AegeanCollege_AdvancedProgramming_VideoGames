@@ -58,7 +58,7 @@
 #### Προστατευμένα Endpoints (Protected - Απαιτείται JWT)
 - Για την επιτυχή ολοκλήρωση των requests θα πρέπει να προστεθεί στα headers το token που επιστρέφεται από τις ***signup()*** και ***login()*** :
 	```bash
-	Authentication: Bearer \<token>
+	Authentication: Bearer <token>
 | Method | Endpoint | Περιγραφή |
 | :--- | :--- | :--- |
 | **POST** | `/` | Εισαγωγή νέου βιντεοπαιχνιδιού στη βάση δεδομένων |
